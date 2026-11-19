@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Game Screen</title>
+<style>
+@font-face { font-family: 'Londrina'; src: url('assets/fonts/LondrinaSolid-Regular.ttf'); font-weight: 400; }
+@font-face { font-family: 'Londrina'; src: url('assets/fonts/LondrinaSolid-Black.ttf'); font-weight: 900; }
+:root {
+  --gold: #FFC216; --blue: #2AAAE2; --ink: #17130f; --purple: #733C80; --orange: #F09C53; --deep: #E06535;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; background: #000; overflow: hidden; cursor: none; }
+#stage {
+  position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: center;
+  font-family: 'Londrina', 'Arial Black', sans-serif; color: #fff; overflow: hidden; background: var(--ink);
+}
+.bg { position: absolute; inset: -40%; filter: blur(70px); opacity: .55;
+  background: conic-gradient(from 0deg, #0c4a6b, var(--blue), #123, var(--purple), #0c4a6b, var(--blue), #1a1208, var(--blue), #0c4a6b);
+  animation: spin 90s linear infinite; }
+.bg2 { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(23,19,15,.25) 0%, rgba(10,8,6,.88) 100%); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.screen { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity .45s, visibility .45s; }
+.screen.on { opacity: 1; visibility: visible; }
+.center { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+
+/* Title */
+.mega { font-weight: 900; font-size: 190px; line-height: .95; color: var(--gold); letter-spacing: 3px;
+  text-shadow: 0 8px 0 #7a5600, 0 16px 40px rgba(0,0,0,.7); }
+.sub { font-size: 58px; margin-top: 26px; color: #fff; text-shadow: 0 4px 12px #000; }
+.tag { font-size: 40px; margin-top: 14px; color: var(--blue); }
+.logos { display: flex; align-items: center; gap: 60px; margin-bottom: 44px; }
+.logo-card { width: 300px; height: 300px; background: #fff; border-radius: 28px; overflow: hidden;
+  box-shadow: 0 14px 40px rgba(0,0,0,.6); border: 6px solid var(--gold); }
+.logo-card.c { border-color: var(--purple); }
+.logo-card img { width: 100%; height: 100%; object-fit: contain; transform: scale(2.05); }
+.vs { font-weight: 900; font-size: 110px; color: #fff; text-shadow: 0 6px 0 #000; }
+
+/* Teams intro */
+.rosters { display: flex; gap: 120px; }
+.roster { width: 640px; border-radius: 36px; padding: 40px; background: rgba(0,0,0,.55); border: 8px solid var(--gold); }
+.roster.t1 { border-color: var(--orange); }
+.roster h2 { font-weight: 900; font-size: 96px; color: var(--gold); line-height: 1; margin-bottom: 26px; }
+.roster.t1 h2 { color: var(--orange); }
+.roster li { list-style: none; font-size: 58px; padding: 6px 0; }
+
+/* Round card */
+#rc-label { font-weight: 900; font-size: 260px; color: var(--gold); text-shadow: 0 10px 0 #7a5600, 0 20px 50px #000; line-height: 1; }
+#rc-mult { font-weight: 900; font-size: 110px; color: var(--blue); margin-top: 20px; text-shadow: 0 6px 0 #063a55; }
+
+/* Board */
+#potwrap { position: absolute; left: 50%; top: 26px; transform: translateX(-50%); text-align: center; }
+#roundlabel { font-size: 36px; color: var(--blue); letter-spacing: 3px; }
+#pot { font-weight: 900; font-size: 120px; line-height: 1; min-width: 330px; padding: 4px 40px 10px; color: var(--gold);
+  background: #0b0906; border: 7px solid var(--gold); border-radius: 30px; box-shadow: 0 0 40px rgba(255,194,22,.35), inset 0 0 30px rgba(42,170,226,.25); }
+#question { position: absolute; left: 310px; right: 310px; top: 214px; height: 88px; display: flex; align-items: center; justify-content: center;
+  text-align: center; font-size: 46px; line-height: 1.05; opacity: 0; transition: opacity .4s; text-shadow: 0 3px 8px #000; }
+#question.on { opacity: 1; }
+#grid { position: absolute; left: 310px; top: 316px; width: 1300px; height: 536px;
+  display: grid; grid-auto-flow: column; grid-template-rows: repeat(4, 1fr); grid-template-columns: 1fr 1fr; gap: 16px; }
+.tile { perspective: 1400px; }
+.inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .6s cubic-bezier(.3,1.4,.5,1); }
+.tile.rev .inner { transform: rotateX(180deg); }
+.front, .back { position: absolute; inset: 0; border-radius: 20px; backface-visibility: hidden; display: flex; align-items: center; border: 5px solid var(--gold); }
+.front { justify-content: center; background: linear-gradient(180deg, #37b9f1 0%, #1b7fb0 55%, #0f5f88 100%); box-shadow: inset 0 4px 0 rgba(255,255,255,.3), 0 8px 18px rgba(0,0,0,.5); }
+.tile.empty .front { border-color: #3b3320; background: linear-gradient(180deg, #17384a, #0e2532); box-shadow: none; }
+.num { width: 86px; height: 86px; border-radius: 50%; background: var(--ink); color: var(--gold); font-weight: 900; font-size: 62px;
+  display: flex; align-items: center; justify-content: center; border: 4px solid var(--gold); }
+.back { transform: rotateX(180deg); background: linear-gradient(180deg, #2a2219, #0d0a07); padding-left: 28px; overflow: hidden; }
+.atext { flex: 1; font-size: 58px; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
+.atext.m { font-size: 46px; } .atext.s { font-size: 36px; }
+.apts { width: 128px; height: 100%; background: var(--gold); color: var(--ink); font-weight: 900; font-size: 70px; display: flex; align-items: center; justify-content: center; }
+
+.team { position: absolute; top: 316px; width: 250px; height: 536px; border-radius: 30px; background: rgba(0,0,0,.6);
+  border: 7px solid var(--gold); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  transition: box-shadow .3s, transform .3s; padding: 14px; }
+.team.t0 { left: 30px; } .team.t1 { right: 30px; border-color: var(--orange); }
+.tname { font-weight: 900; font-size: 54px; line-height: 1; color: var(--gold); word-break: break-word; }
+.t1 .tname { color: var(--orange); }
+.tscore { font-weight: 900; font-size: 128px; line-height: 1; margin-top: 30px; }
+.tstatus { font-size: 34px; height: 40px; margin-top: 24px; color: var(--blue); letter-spacing: 2px; }
+.team.active { box-shadow: 0 0 0 8px rgba(255,255,255,.9), 0 0 70px var(--gold); transform: scale(1.04); }
+.team.t1.active { box-shadow: 0 0 0 8px rgba(255,255,255,.9), 0 0 70px var(--orange); }
+.team.buzzed { animation: flash .35s 4; }
+@keyframes flash { 50% { background: #fff; } }
+
+#strikes { position: absolute; left: 50%; top: 878px; transform: translateX(-50%); display: flex; gap: 26px; opacity: 0; transition: opacity .3s; }
+#strikes.on { opacity: 1; }
+.sx { width: 140px; height: 140px; border-radius: 26px; border: 6px solid #5a4a2a; background: rgba(0,0,0,.5);
+  display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 120px; color: transparent; line-height: 1; }
+.sx.hit { border-color: #ff3b2f; color: #ff3b2f; background: #2a0906; box-shadow: 0 0 30px rgba(255,59,47,.6); }
+
+#xoverlay { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; gap: 50px; background: rgba(0,0,0,.45); }
+#xoverlay.on { display: flex; }
+.bigx { width: 420px; height: 420px; border-radius: 60px; border: 22px solid #ff3b2f; background: #2a0906; color: #ff3b2f;
+  font-weight: 900; font-size: 400px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 120px rgba(255,59,47,.8); animation: pop .35s cubic-bezier(.2,1.8,.4,1); }
+.bigmsg { font-weight: 900; font-size: 200px; color: #ff3b2f; text-shadow: 0 10px 0 #000; animation: pop .35s cubic-bezier(.2,1.8,.4,1); }
+@keyframes pop { from { transform: scale(.2); opacity: 0; } }
+
+/* Lightning round */
+#fm-title { position: absolute; top: 34px; width: 100%; text-align: center; font-weight: 900; font-size: 120px; color: var(--gold); text-shadow: 0 7px 0 #7a5600; }
+#fm-cols { position: absolute; top: 210px; left: 160px; right: 160px; display: flex; gap: 80px; }
+.fmcol { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+.fmrow { display: flex; height: 104px; border: 5px solid var(--gold); border-radius: 18px; overflow: hidden; background: linear-gradient(180deg, #2a2219, #0d0a07); }
+.fmtext { flex: 1; display: flex; align-items: center; padding-left: 26px; font-size: 54px; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
+.fmpts { width: 140px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 70px; background: #0b0906; color: var(--gold); border-left: 5px solid var(--gold); }
+#fm-bottom { position: absolute; bottom: 44px; width: 100%; display: flex; justify-content: center; align-items: center; gap: 90px; }
+#fm-timer { width: 190px; height: 190px; border-radius: 50%; border: 10px solid var(--blue); background: #0b0906; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 120px; color: var(--blue); }
+#fm-timer.low { border-color: #ff3b2f; color: #ff3b2f; }
+#fm-total { font-weight: 900; font-size: 120px; color: #fff; }
+#fm-total b { color: var(--gold); }
+#fm-total.won { animation: glow .6s infinite alternate; }
+@keyframes glow { to { text-shadow: 0 0 60px var(--gold); transform: scale(1.06); } }
+
+/* Winner */
+#w-name { font-weight: 900; font-size: 230px; color: var(--gold); line-height: 1; text-shadow: 0 10px 0 #7a5600, 0 20px 50px #000; }
+#w-score { font-weight: 900; font-size: 130px; margin-top: 24px; }
+.conf { position: absolute; top: -40px; width: 22px; height: 34px; animation: fall linear infinite; }
+@keyframes fall { to { transform: translateY(1200px) rotate(720deg); } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="bg"></div><div class="bg2"></div>
+
+  <section id="s-title" class="screen center">
+    <div class="logos">
+      <div class="logo-card"><img src="assets/tdi-logo.png" alt=""></div>
+      <div class="vs">VS</div>
+      <div class="logo-card c"><img src="assets/crabs-logo.png" alt=""></div>
+    </div>
+    <div class="mega" id="t-title"></div>
+    <div class="sub" id="t-sub"></div>
+    <div class="tag" id="t-tag"></div>
+  </section>
+
+  <section id="s-teams" class="screen center">
+    <div class="rosters">
+      <div class="roster t0"><h2 id="ro-n0"></h2><ul id="ro-p0"></ul></div>
+      <div class="roster t1"><h2 id="ro-n1"></h2><ul id="ro-p1"></ul></div>
+    </div>
+  </section>
+
+  <section id="s-roundcard" class="screen center">
+    <div id="rc-label"></div><div id="rc-mult"></div>
+  </section>
+
+  <section id="s-board" class="screen">
+    <div id="potwrap"><div id="roundlabel"></div><div id="pot">0</div></div>
+    <div id="question"></div>
+    <div class="team t0" id="team0"><div class="tname"></div><div class="tscore">0</div><div class="tstatus"></div></div>
+    <div class="team t1" id="team1"><div class="tname"></div><div class="tscore">0</div><div class="tstatus"></div></div>
+    <div id="grid"></div>
+    <div id="strikes"><div class="sx">X</div><div class="sx">X</div><div class="sx">X</div></div>
+  </section>
+
+  <section id="s-fm" class="screen">
+    <div id="fm-title"></div>
+    <div id="fm-cols"><div class="fmcol" id="fm-c0"></div><div class="fmcol" id="fm-c1"></div></div>
+    <div id="fm-bottom"><div id="fm-timer"></div><div id="fm-total"></div></div>
+  </section>
+
+  <section id="s-winner" class="screen center">
+    <div class="sub">WINNER</div>
+    <div id="w-name"></div>
+    <div id="w-score"></div>
+    <div id="confetti"></div>
+  </section>
+
+  <div id="xoverlay"></div>
+</div>
+<script src="js/questions.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/display.js"></script>
+</body>
+</html>
