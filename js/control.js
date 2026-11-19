@@ -1,12 +1,13 @@
-/* The control panel: the laptop side. Every click here drives the game screen. */
+/* The control center: the laptop side. Every click here drives the game screen. */
 (function () {
   const DATA = Engine.prep(window.GAME_DATA);
-  const KEY = 'cbf_state_v1', SIG = JSON.stringify(DATA).length;
+  const KEY = 'cbf_state_v2', SIG = JSON.stringify(DATA).length;
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const bc = 'BroadcastChannel' in window ? new BroadcastChannel('cbf') : null;
   const app = $('app');
   let state, history = [], displayWin = null, timerInt = null, adjVal = [5, 5], volume = 0.9;
+  let moreOpen = false, autoTimer = null, restTimer = null;
 
   try {
     const saved = JSON.parse(localStorage.getItem(KEY));
@@ -17,27 +18,48 @@
   function save() { try { localStorage.setItem(KEY, JSON.stringify({ sig: SIG, state })); } catch (e) {} }
 
   function send(fx) {
-    const msg = { type: 'state', id: Date.now() + Math.random(), state, fx: fx || null };
+    const msg = { type: 'state', id: Date.now() + Math.random(), state, fx: fx || [] };
     if (displayWin && !displayWin.closed) { try { displayWin.postMessage(msg, '*'); } catch (e) {} }
     if (bc) bc.postMessage(msg);
   }
 
   function snapshot() { history.push(JSON.stringify(state)); if (history.length > 300) history.shift(); }
 
+  function playSounds(list) {
+    list.forEach(n => { const p = n.split('@'); SFX.play(p[0], +p[1] || 0); });
+  }
+
   function act(a) {
+    if (a.t === 'revealRest') return revealRest();
     snapshot();
+    clearTimeout(autoTimer);
     const out = Engine.act(state, DATA, a);
-    out.sounds.forEach(n => SFX.play(n));
+    playSounds(out.sounds);
     if (a.t === 'screen') {
-      if (a.v === 'winner') { SFX.music(false); setTimeout(() => { if (state.screen === 'winner') { SFX.music(true); render(); } }, 3200); }
+      if (a.v === 'winner') { SFX.music(false); setTimeout(() => { if (state.screen === 'winner') { SFX.music(true); render(); } }, 4500); }
       else SFX.music(a.v === 'title' || a.v === 'teams');
     }
-    if (a.t === 'gotoRound') SFX.music(false);
+    if (a.t === 'gotoRound') {
+      SFX.music(false);
+      // The round card shows itself, then the board comes up on its own.
+      autoTimer = setTimeout(() => { if (state.screen === 'roundcard') act({ t: 'screen', v: 'board' }); }, 3200);
+    }
     save(); send(out.fx); render();
+  }
+
+  // After a round, flip the answers nobody got, bottom to top, one per second.
+  function revealRest() {
+    clearTimeout(restTimer);
+    const left = [];
+    state.revealed.forEach((v, i) => { if (!v) left.push(i); });
+    if (!left.length || state.phase !== 'done') return;
+    act({ t: 'reveal', i: left[left.length - 1] });
+    if (left.length > 1) restTimer = setTimeout(revealRest, 1100);
   }
 
   function undo() {
     if (!history.length) return;
+    clearTimeout(autoTimer); clearTimeout(restTimer);
     state = JSON.parse(history.pop());
     save(); send(); render();
   }
@@ -57,144 +79,163 @@
 
   /* ---------- drawing ---------- */
   const btn = (label, c, attrs, cls) => '<button tabindex="-1" data-c="' + c + '" ' + (attrs || '') + ' class="' + (cls || '') + '">' + label + '</button>';
+  const tbtn = (i, label, c, cls) => btn(label, c, 'data-team="' + i + '"', (cls || '') + ' team' + i);
 
-  function topBar() {
-    return '<div class="bar">' +
-      btn('GO LIVE', 'open', '', 'gold big') +
-      btn('Undo (Ctrl+Z)', 'undo', history.length ? '' : 'disabled') +
-      '<span class="grow"></span>' +
-      btn(SFX.isMusic() ? 'Theme music: ON' : 'Theme music: off', 'music', '', SFX.isMusic() ? 'on' : '') +
-      btn('Applause', 'snd', 'data-v="applause"') + btn('Big applause', 'snd', 'data-v="applauseLong"') +
-      btn('Drumroll', 'snd', 'data-v="drumroll"') + btn('Sad horn', 'snd', 'data-v="womp"') +
-      btn('Sting', 'snd', 'data-v="sting"') + btn('Fanfare', 'snd', 'data-v="fanfare"') +
-      '<label class="muted">Vol <input type="range" id="vol" data-b="vol" min="0" max="1" step="0.05" value="' + volume + '"></label>' +
-      '</div>';
+  function whatNow() {
+    const T = state.teams, c = state.control, r = DATA.rounds[state.roundIdx], F = DATA.fastMoney;
+    switch (state.screen) {
+      case 'title': return 'Title screen is up. Press GO LIVE to open the game screen and start the theme.';
+      case 'teams': return 'Team rosters are on screen.';
+      case 'roundcard': return r.label + ' card is showing. The board comes up by itself in a moment.';
+      case 'winner': return 'Winner screen is up.';
+      case 'fm': {
+        const p = state.fm.stage, step = Engine.fmNextStep(state, p);
+        if (state.fm.won) return 'They hit ' + F.target + '. They win!';
+        if (state.fm.lost) return 'All answers revealed. They came up short.';
+        if (!step) return 'Player 1 is done. Press NEXT to bring out player 2.';
+        return 'Player ' + (p + 1) + ': start the clock, type their 5 answers, match them, then press REVEAL for each one.';
+      }
+    }
+    if (state.phase === 'faceoff') return r.answers.length === 1
+      ? 'SUDDEN DEATH. Click who buzzed. If they say the answer, click it, then give that team the pot.'
+      : 'FACE-OFF. Click who buzzed. Click the answer they give, or WRONG. Then pick which team plays.';
+    if (state.phase === 'play') return esc(T[c].name) + ' is playing. Click each answer they get, or WRONG. Strikes: ' + state.strikes + ' of 3.';
+    if (state.phase === 'steal') return esc(T[1 - c].name) + ' gets ONE guess to steal. Click their answer if it is up there, otherwise WRONG.';
+    return 'Round over. ' + esc(T[state.awardedTo].name) + ' won ' + state.pot + ' points. Press NEXT.';
   }
 
-  function screens() {
-    const list = [['title', 'Title'], ['teams', 'Teams'], ['roundcard', 'Round card'], ['board', 'Board'], ['fm', DATA.fastMoney.label], ['winner', 'Winner']];
-    return '<div class="card"><h2>What the game screen shows</h2><div class="bar">' +
-      list.map(s => btn(s[1], 'screen', 'data-v="' + s[0] + '"', state.screen === s[0] ? 'on' : '')).join('') +
-      '<span class="grow"></span>' + btn('New game', 'newGame', '', 'red') + '</div></div>';
+  function header() {
+    const nx = Engine.next(state, DATA);
+    return '<div class="top">' +
+      btn('GO LIVE', 'open', '', 'gold') + btn('Undo', 'undo', history.length ? '' : 'disabled') +
+      '<div class="now">' + whatNow() + '</div>' +
+      '<button tabindex="-1" data-c="next" class="next"' + (nx ? '' : ' disabled') + '>' + (nx ? 'NEXT: ' + esc(nx.label) + ' &#9654;' : 'NEXT') + '</button></div>';
   }
 
   function scores() {
-    return '<div class="cols">' + state.teams.map((t, i) =>
-      '<div class="card"><div class="bar"><input id="tn' + i + '" data-b="tname" data-team="' + i + '" value="' + esc(t.name) + '" style="width:190px;font-weight:700">' +
-      '<span class="score">' + t.score + '</span><span class="grow"></span>' +
-      btn('-', 'adj', 'data-team="' + i + '" data-sign="-1"') +
-      '<input id="adj' + i + '" data-b="adj" data-team="' + i + '" type="number" value="' + adjVal[i] + '" style="width:70px">' +
-      btn('+', 'adj', 'data-team="' + i + '" data-sign="1"') + '</div></div>').join('') + '</div>';
+    return '<div class="cols">' + state.teams.map((t, i) => {
+      const live = (state.phase === 'play' && state.control === i) || (state.phase === 'steal' && state.control === 1 - i);
+      return '<div class="card team' + i + (live && state.screen === 'board' ? ' live' : '') + '"><div class="bar">' +
+        '<input id="tn' + i + '" data-b="tname" data-team="' + i + '" value="' + esc(t.name) + '" class="tname">' +
+        '<span class="grow"></span><span class="score">' + t.score + '</span></div></div>';
+    }).join('') + '</div>';
   }
 
-  function statusLine(r) {
-    const T = state.teams, c = state.control;
-    const lead = T[0].score >= DATA.winScore || T[1].score >= DATA.winScore;
-    let h = '';
-    if (state.phase === 'faceoff') h = 'FACE-OFF. Click who buzzed first. Reveal what they say or hit WRONG. Then choose who plays.' +
-      (r.answers.length === 1 ? ' Sudden death: whoever names the answer gets the pot (use Award).' : '');
-    else if (state.phase === 'play') h = esc(T[c].name) + ' is playing. Strikes: ' + state.strikes + ' of 3.';
-    else if (state.phase === 'steal') h = esc(T[1 - c].name) + ' can STEAL. Reveal their answer if it is on the board, otherwise hit WRONG.';
-    else h = 'Round over. ' + esc(T[state.awardedTo].name) + ' won ' + state.pot + '. Click the leftover answers to show them, then go to the next round.';
-    let out = '<div class="status">' + h + '</div>';
-    if (lead && state.phase === 'done') {
-      const w = T[0].score >= T[1].score ? 0 : 1;
-      out += '<div class="status win">' + esc(T[w].name) + ' has reached ' + DATA.winScore + '. Show the Winner screen, then the ' + esc(DATA.fastMoney.label) + '.</div>';
-    }
-    return out;
-  }
-
-  function roundPanel() {
+  function boardPanel() {
     const r = DATA.rounds[state.roundIdx], T = state.teams, ph = state.phase;
-    let h = '<div class="card"><h2>Main game</h2><div class="bar">' +
-      DATA.rounds.map((x, i) => btn(esc(x.label) + (x.multiplier > 1 ? ' x' + x.multiplier : ''), 'round', 'data-i="' + i + '"', i === state.roundIdx ? 'on' : '')).join('') +
-      '<span class="grow"></span><span class="pot">POT ' + state.pot + '</span></div>' +
-      statusLine(r) +
-      '<div class="q">' + esc(r.question) + '</div>' +
-      '<div class="bar" style="margin-bottom:8px">' +
-      btn(state.screen === 'board' ? 'Board is showing' : 'Show board', 'screen', 'data-v="board"', state.screen === 'board' ? 'on' : 'gold') +
-      btn(state.showQuestion ? 'Hide question on screen' : 'Show question on screen', 'toggleQ', '', state.showQuestion ? 'on' : '') +
-      '</div><div class="answers">';
+    let h = '<div class="card"><div class="bar"><h2>' + esc(r.label) + (r.multiplier > 1 ? ' (points x' + r.multiplier + ')' : '') + '</h2><span class="grow"></span>' +
+      btn(state.showQuestion ? 'Question is on screen' : 'Put question on screen', 'toggleQ', '', state.showQuestion ? 'on' : '') +
+      '<span class="pot">POT ' + state.pot + '</span></div>' +
+      '<div class="q">' + esc(r.question) + '</div><div class="answers">';
     const half = Math.ceil(r.answers.length / 2);
     for (let row = 0; row < half; row++) [row, row + half].forEach(i => {
       const a = r.answers[i];
-      h += a ? '<button tabindex="-1" class="ans ' + (state.revealed[i] ? 'rev' : '') + '" data-c="reveal" data-i="' + i + '"' + (state.revealed[i] ? ' disabled' : '') +
-        '><b>' + (i + 1) + '</b><span>' + esc(a.text) + '</span><em>' + a.points + '</em></button>' : '<span></span>';
+      h += a ? '<button tabindex="-1" class="ans ' + (state.revealed[i] ? 'rev' : '') + '" data-c="reveal" data-i="' + i + '">' +
+        '<b>' + (i + 1) + '</b><span>' + esc(a.text) + '</span><em>' + a.points + '</em></button>' : '<span></span>';
     });
-    h += '</div><div class="bar" style="margin-top:10px">' +
-      btn('WRONG (X)', 'strike', ph === 'done' ? 'disabled' : '', 'red big');
+    h += '</div><p class="muted">Click an answer to flip it. Click it again to flip it back.</p><div class="actions">';
     if (ph === 'faceoff') {
-      h += T.map((t, i) => btn('Buzz: ' + esc(t.name), 'buzz', 'data-team="' + i + '"', state.buzzed === i ? 'on' : '')).join('') +
-        '<span class="grow"></span>' +
-        T.map((t, i) => btn(esc(t.name) + ' plays', 'control', 'data-team="' + i + '"', 'gold')).join('');
+      h += '<div><h3>1. Who buzzed first?</h3><div class="bar">' + T.map((t, i) => tbtn(i, esc(t.name), 'buzz', state.buzzed === i ? 'on' : '')).join('') + '</div></div>' +
+        '<div><h3>2. Wrong answer?</h3>' + btn('WRONG', 'strike', '', 'red big') + '</div>';
+      h += r.answers.length === 1
+        ? '<div><h3>3. Who got it?</h3><div class="bar">' + T.map((t, i) => tbtn(i, 'Pot to ' + esc(t.name), 'award', 'big')).join('') + '</div></div>'
+        : '<div><h3>3. Who plays the round?</h3><div class="bar">' + T.map((t, i) => tbtn(i, esc(t.name) + ' plays', 'control', 'big')).join('') + '</div></div>';
+    } else if (ph === 'play' || ph === 'steal') {
+      h += '<div>' + btn(ph === 'steal' ? 'WRONG: steal failed' : 'WRONG', 'strike', '', 'red huge') + '</div>' +
+        '<div class="strikes">' + [0, 1, 2].map(i => '<span class="' + (i < state.strikes ? 'hit' : '') + '">X</span>').join('') + '</div>';
     }
-    if (ph !== 'done') h += '<span class="grow"></span>' + T.map((t, i) => btn('Award pot: ' + esc(t.name), 'award', 'data-team="' + i + '"')).join('');
-    else h += '<span class="grow"></span>' + btn('Next round', 'round', 'data-i="' + (state.roundIdx + 1) + '"' + (state.roundIdx + 1 >= DATA.rounds.length ? ' disabled' : ''), 'gold big');
-    h += '</div><p class="muted">Keys while the board is showing: <kbd>1</kbd> to <kbd>8</kbd> reveal an answer, <kbd>X</kbd> wrong answer, <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo.</p></div>';
-    return h;
+    return h + '</div></div>';
   }
 
   function fmPanel() {
-    const F = DATA.fastMoney, fm = state.fm;
-    let h = '<div class="card"><h2>' + esc(F.label) + '</h2><div class="bar">' +
-      btn('Show on screen', 'screen', 'data-v="fm"', state.screen === 'fm' ? 'on' : 'gold') +
-      btn('Start ' + F.times[0] + 's (player 1)', 'timer', 'data-v="' + F.times[0] + '"') +
-      btn('Start ' + F.times[1] + 's (player 2)', 'timer', 'data-v="' + F.times[1] + '"') +
-      btn('Stop clock', 'timerStop') +
-      '<span class="pot">Clock <span id="fmTime">' + (fm.timeLeft == null ? '--' : fm.timeLeft) + '</span></span>' +
-      '<span class="grow"></span>' +
-      btn(fm.hideP1 ? 'Player 1 answers HIDDEN' : 'Hide player 1 answers', 'fmHide', '', fm.hideP1 ? 'on' : '') +
-      btn('Already said (buzz)', 'fmDup', '', 'red') +
+    const F = DATA.fastMoney, fm = state.fm, stage = fm.stage, step = Engine.fmNextStep(state, stage);
+    const revLabel = !step ? 'All revealed' : 'REVEAL: ' + (step.what === 'text' ? 'answer ' : 'points for answer ') + (step.q + 1);
+    let h = '<div class="card"><div class="bar"><h2>' + esc(F.label) + ': player ' + (stage + 1) + '</h2><span class="grow"></span>' +
       '<span class="pot">TOTAL ' + Engine.fmTotal(state, DATA) + ' / ' + F.target + '</span></div>' +
-      '<p class="muted">Type what each player says (Tab jumps to the next box). After the clock, pick the matching survey answer, then reveal the answer and its points one at a time.</p>' +
-      '<div class="cols">';
+      '<div class="actions">' +
+      '<div><h3>1. Run the clock</h3><div class="bar">' + btn('Start ' + F.times[stage] + ' seconds', 'timer', 'data-v="' + F.times[stage] + '"', 'gold big') +
+      btn('Stop', 'timerStop') + '<span class="pot"><span id="fmTime">' + (fm.timeLeft == null ? '--' : fm.timeLeft) + '</span></span>' +
+      (stage === 1 ? btn('Already said', 'fmDup', '', 'red') : '') + '</div></div>' +
+      '<div><h3>2. Type and match below, then reveal</h3>' + btn(revLabel, 'fmNext', step ? '' : 'disabled', 'gold huge') + '</div>' +
+      '</div><div class="cols">';
     [0, 1].forEach(p => {
-      h += '<div><h2>Player ' + (p + 1) + '</h2>';
+      h += '<div class="' + (p === stage ? '' : 'dim') + '"><h3>Player ' + (p + 1) + (p === 0 && fm.hideP1 ? ' (hidden on screen)' : '') + '</h3>';
       F.questions.forEach((q, i) => {
         const a = fm.answers[p][i];
         h += '<div class="fmrow"><div class="fmq">' + (i + 1) + '. ' + esc(q.question) + '</div>' +
-          '<input id="fm' + p + '_' + i + '" data-b="said" data-p="' + p + '" data-q="' + i + '" value="' + esc(a.said) + '" placeholder="What they said">' +
+          '<input ' + (p === stage ? '' : 'tabindex="-1" ') + 'id="fm' + p + '_' + i + '" data-b="said" data-p="' + p + '" data-q="' + i + '" value="' + esc(a.said) + '" placeholder="What they said">' +
           '<select tabindex="-1" id="fmm' + p + '_' + i + '" data-b="match" data-p="' + p + '" data-q="' + i + '">' +
           '<option value="-1">Not on the list (0)</option>' +
           q.answers.map((x, k) => '<option value="' + k + '"' + (a.match === k ? ' selected' : '') + '>' + esc(x.text) + ' (' + x.points + ')</option>').join('') +
-          '</select>' +
-          btn('Answer', 'fmText', 'data-p="' + p + '" data-q="' + i + '"' + (a.text ? ' disabled' : '')) +
-          btn('Points', 'fmPts', 'data-p="' + p + '" data-q="' + i + '"' + (a.pts ? ' disabled' : ''), 'gold') +
-          '<b>' + (a.pts ? Engine.fmPoints(state, DATA, p, i) : '') + '</b></div>';
+          '</select><b>' + (a.pts ? Engine.fmPoints(state, DATA, p, i) : a.text ? 'shown' : '') + '</b></div>';
       });
       h += '</div>';
     });
-    return h + '</div><div class="bar">' + btn('Clear ' + esc(F.label), 'fmReset', '', 'red') + '</div></div>';
+    return h + '</div></div>';
   }
 
-  function setup() {
-    return '<div class="card"><h2>Player names (shown on the Teams screen)</h2><div class="cols">' + state.teams.map((t, i) =>
-      '<div class="bar">' + t.players.map((p, k) => '<input id="pl' + i + '_' + k + '" data-b="player" data-team="' + i + '" data-i="' + k + '" value="' + esc(p) + '" style="width:110px">').join('') + '</div>').join('') +
-      '</div><p class="muted">Setup: click GO LIVE, drag that window onto the projector, then press <kbd>F</kbd> in it for full screen. Sound plays from this laptop.</p></div>';
+  function simplePanel() {
+    if (state.screen !== 'teams') return '';
+    return '<div class="card"><h2>Player names</h2><div class="cols">' + state.teams.map((t, i) =>
+      '<div class="bar">' + t.players.map((p, k) => '<input id="pl' + i + '_' + k + '" data-b="player" data-team="' + i + '" data-i="' + k + '" value="' + esc(p) + '" style="width:112px">').join('') + '</div>').join('') + '</div></div>';
+  }
+
+  function more() {
+    const T = state.teams;
+    const list = [['title', 'Title'], ['teams', 'Teams'], ['board', 'Board'], ['fm', DATA.fastMoney.label], ['winner', 'Winner']];
+    const snd = [['applause', 'Applause'], ['applauseLong', 'Big applause'], ['cheer', 'Cheer'], ['aww', 'Aww'], ['drumroll', 'Drumroll'],
+      ['womp', 'Sad horn'], ['sting', 'Sting'], ['fanfare', 'Fanfare'], ['buzzer', 'Buzzer'], ['ding', 'Ding']];
+    return '<details class="card" id="more"' + (moreOpen ? ' open' : '') + '><summary>More controls: sounds, fix a score, jump around</summary>' +
+      '<h3>Sound board</h3><div class="bar">' +
+      btn(SFX.isMusic() ? 'Theme music: ON' : 'Theme music: off', 'music', '', SFX.isMusic() ? 'on' : '') +
+      snd.map(s => btn(s[1], 'snd', 'data-v="' + s[0] + '"')).join('') +
+      '<label class="muted">Volume <input type="range" id="vol" data-b="vol" min="0" max="1" step="0.05" value="' + volume + '"></label></div>' +
+      '<h3>Fix a score</h3><div class="bar">' + T.map((t, i) => '<span>' + esc(t.name) + '</span>' +
+        btn('-', 'adj', 'data-team="' + i + '" data-sign="-1"') +
+        '<input id="adj' + i + '" data-b="adj" data-team="' + i + '" type="number" value="' + adjVal[i] + '" style="width:70px">' +
+        btn('+', 'adj', 'data-team="' + i + '" data-sign="1"') + '<span style="width:24px"></span>').join('') +
+      (state.phase !== 'done' ? T.map((t, i) => tbtn(i, 'Give pot to ' + esc(t.name), 'award')).join('') : '') + '</div>' +
+      '<h3>Jump to a screen</h3><div class="bar">' + list.map(s => btn(s[1], 'screen', 'data-v="' + s[0] + '"', state.screen === s[0] ? 'on' : '')).join('') + '</div>' +
+      '<h3>Jump to a round (restarts that round)</h3><div class="bar">' +
+      DATA.rounds.map((x, i) => btn(esc(x.label), 'round', 'data-i="' + i + '"', i === state.roundIdx ? 'on' : '')).join('') + '</div>' +
+      '<h3>' + esc(DATA.fastMoney.label) + '</h3><div class="bar">' +
+      btn(state.fm.hideP1 ? 'Player 1 answers are hidden' : 'Hide player 1 answers', 'fmHide', '', state.fm.hideP1 ? 'on' : '') +
+      btn('Back to player 1', 'fmStage0') + btn('Clear all answers', 'fmReset', '', 'red') + '</div>' +
+      '<h3>Start over</h3><div class="bar">' + btn('New game', 'newGame', '', 'red') + '</div>' +
+      '<p class="muted">Keys: <kbd>Enter</kbd> = NEXT. On the board: <kbd>1</kbd> to <kbd>8</kbd> flip an answer, <kbd>X</kbd> wrong. <kbd>Ctrl</kbd>+<kbd>Z</kbd> undo.<br>' +
+      'Setup: press GO LIVE, drag the new window onto the projector, press <kbd>F</kbd> in it for full screen. Sound plays from this computer.</p></details>';
   }
 
   function render() {
     const el = document.activeElement, id = el && el.id;
     let pos = null; try { pos = el.selectionStart; } catch (e) {}
-    app.innerHTML = topBar() + screens() + scores() + roundPanel() + fmPanel() + setup();
+    const y = window.scrollY;
+    app.innerHTML = header() + scores() +
+      (state.screen === 'board' ? boardPanel() : state.screen === 'fm' ? fmPanel() : simplePanel()) + more();
     if (id) {
       const n = $(id);
       if (n) { n.focus(); if (pos != null) { try { n.setSelectionRange(pos, pos); } catch (e) {} } }
     }
+    window.scrollTo(0, y);
   }
 
   /* ---------- input ---------- */
+  function doNext() { const nx = Engine.next(state, DATA); if (nx) act(nx.a); }
+
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-c]');
     if (!b || b.disabled) return;
     SFX.init();
     const d = b.dataset, n = x => parseInt(x, 10);
     switch (d.c) {
-      case 'open': displayWin = window.open('display.html', 'cbf_display', 'width=1280,height=720'); setTimeout(send, 600); break;
+      case 'open': displayWin = window.open('display.html', 'cbf_display', 'width=1280,height=720'); setTimeout(send, 600);
+        if (state.screen === 'title' || state.screen === 'teams') { SFX.music(true); render(); }
+        break;
       case 'undo': undo(); break;
+      case 'next': doNext(); break;
       case 'screen': act({ t: 'screen', v: d.v }); break;
       case 'round': act({ t: 'gotoRound', i: n(d.i) }); break;
-      case 'reveal': act({ t: 'reveal', i: n(d.i) }); break;
+      case 'reveal': clearTimeout(restTimer); act({ t: 'reveal', i: n(d.i) }); break;
       case 'strike': act({ t: 'strike' }); break;
       case 'buzz': act({ t: 'buzz', team: n(d.team) }); break;
       case 'control': act({ t: 'control', team: n(d.team) }); break;
@@ -205,15 +246,15 @@
       case 'music': SFX.music(!SFX.isMusic()); render(); break;
       case 'timer': startTimer(n(d.v)); break;
       case 'timerStop': stopTimer(); break;
-      case 'fmText': act({ t: 'fmText', p: n(d.p), q: n(d.q) }); break;
-      case 'fmPts': act({ t: 'fmPts', p: n(d.p), q: n(d.q) }); break;
+      case 'fmNext': act({ t: 'fmNext' }); break;
       case 'fmHide': act({ t: 'fmHide', v: !state.fm.hideP1 }); break;
+      case 'fmStage0': act({ t: 'fmStage', v: 0 }); break;
       case 'fmDup': act({ t: 'fmDup' }); break;
       case 'fmReset': if (confirm('Clear all ' + DATA.fastMoney.label + ' answers?')) { stopTimer(); act({ t: 'fmReset' }); } break;
       case 'newGame':
         if (confirm('Start a brand new game? All scores reset.')) {
-          snapshot(); stopTimer(); SFX.music(false);
-          state = Engine.newState(DATA); save(); send(); render();
+          snapshot(); stopTimer(); clearTimeout(autoTimer); clearTimeout(restTimer);
+          state = Engine.newState(DATA); SFX.music(true); save(); send(); render();
         }
         break;
     }
@@ -237,14 +278,17 @@
     else if (d && d.b === 'tname') setTimeout(render, 0);
   });
 
+  document.addEventListener('toggle', e => { if (e.target.id === 'more') moreOpen = e.target.open; }, true);
+
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
       if (/INPUT|TEXTAREA/.test(e.target.tagName) && e.target.type !== 'range') return;
       e.preventDefault(); undo(); return;
     }
     if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName) || e.ctrlKey || e.altKey || e.metaKey) return;
-    if (state.screen !== 'board') return;
     SFX.init();
+    if (e.key === 'Enter') { e.preventDefault(); doNext(); return; }
+    if (state.screen !== 'board') return;
     if (e.key >= '1' && e.key <= '8') {
       const i = +e.key - 1;
       if (i < DATA.rounds[state.roundIdx].answers.length) act({ t: 'reveal', i });

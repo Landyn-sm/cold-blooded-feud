@@ -2,14 +2,14 @@
   All sounds are generated live in the browser, so they are original and need no files.
   To swap one for your own recording, drop an mp3 in the "sounds" folder named after it:
   ding, dingTop, buzzer, buzzIn, tick, timeUp, fmReveal, fmZero, duplicate, womp,
-  fanfare, sting, drumroll, applause, applauseLong, theme
+  fanfare, sting, drumroll, applause, applauseLong, cheer, aww, whoosh, theme
 */
 const SFX = (function () {
   let ctx, out, sfx, mus, noise, clap, vol = 0.9;
   let musicOn = false, musicTimer = null, nextBar = 0, bar = 0, themeEl = null;
   const over = {};
   const NAMES = ['ding', 'dingTop', 'buzzer', 'buzzIn', 'tick', 'timeUp', 'fmReveal', 'fmZero', 'duplicate',
-    'womp', 'fanfare', 'sting', 'drumroll', 'applause', 'applauseLong', 'theme'];
+    'womp', 'fanfare', 'sting', 'drumroll', 'applause', 'applauseLong', 'cheer', 'aww', 'whoosh', 'theme'];
 
   NAMES.forEach(n => {
     try {
@@ -164,7 +164,10 @@ const SFX = (function () {
       tone({ f: 130, f2: 45, t: 2.42, d: 0.3, g: 0.5 });
     },
     applause() { crowd(4.2, 0.5); },
-    applauseLong() { crowd(7.5, 0.6); }
+    applauseLong() { crowd(7.5, 0.6); },
+    cheer() { crowd(3, 0.7); },
+    aww() { [220, 233, 262, 294].forEach(f => tone({ type: 'sawtooth', f, f2: f * 0.78, d: 1.3, g: 0.05, lp: 900, hold: 1, a: 0.15 })); },
+    whoosh() { nz({ d: 0.45, g: 0.18, ft: 'bandpass', ff: 1200, q: 1.2, a: 0.2 }); }
   };
 
   /* Theme music: an original eight bar loop. */
@@ -224,9 +227,10 @@ const SFX = (function () {
     }
   }
 
-  function play(name) {
+  function play(name, delayMs) {
     init();
-    if (over[name]) { const c = over[name].cloneNode(); c.volume = vol; c.play(); return; }
+    if (delayMs) { setTimeout(() => play(name), delayMs); return; }
+    if (over[name]) { const c = over[name].cloneNode(); c.volume = vol; c.play().catch(() => {}); return; }
     if (S[name]) S[name]();
   }
 

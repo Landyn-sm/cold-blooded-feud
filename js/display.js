@@ -4,7 +4,7 @@
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const bc = 'BroadcastChannel' in window ? new BroadcastChannel('cbf') : null;
-  let lastId = null, boardKey = null, xTimer = null;
+  let lastId = null, boardKey = null, xTimer = null, bTimer = null, lastScreen = null;
 
   function fit() {
     const s = Math.min(innerWidth / 1920, innerHeight / 1080);
@@ -21,6 +21,7 @@
     const from = el._v == null ? target : el._v;
     el._v = target;
     if (from === target) { el.textContent = target; return; }
+    el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
     const t0 = performance.now();
     cancelAnimationFrame(el._raf);
     (function step(now) {
@@ -44,6 +45,11 @@
 
   function render(s) {
     document.querySelectorAll('.screen').forEach(el => el.classList.toggle('on', el.id === 's-' + s.screen));
+    if (s.screen !== lastScreen) {           // replay the entrance animation of the new screen
+      const sc = $('s-' + s.screen);
+      sc.classList.remove('enter'); void sc.offsetWidth; sc.classList.add('enter');
+      lastScreen = s.screen;
+    }
     const r = DATA.rounds[s.roundIdx];
 
     $('t-title').textContent = DATA.title;
@@ -66,8 +72,13 @@
     $('rc-label').textContent = r.label;
     $('rc-mult').textContent = r.multiplier === 2 ? 'DOUBLE POINTS' : r.multiplier === 3 ? 'TRIPLE POINTS' : '';
 
-    if (boardKey !== s.roundIdx) { buildGrid(r); boardKey = s.roundIdx; }
-    document.querySelectorAll('#grid .tile[data-i]').forEach(t => t.classList.toggle('rev', !!s.revealed[+t.dataset.i]));
+    const fresh = boardKey !== s.roundIdx;
+    if (fresh) { buildGrid(r); boardKey = s.roundIdx; }
+    document.querySelectorAll('#grid .tile[data-i]').forEach(t => {
+      const on = !!s.revealed[+t.dataset.i];
+      if (on && !t.classList.contains('rev') && !fresh) { t.classList.remove('pop'); void t.offsetWidth; t.classList.add('pop'); }
+      t.classList.toggle('rev', on);
+    });
     $('roundlabel').textContent = r.label + (r.multiplier > 1 ? '  x' + r.multiplier : '');
     setNum($('pot'), s.pot);
     $('question').textContent = r.question;
@@ -99,11 +110,22 @@
   }
 
   function fx(f) {
-    const o = $('xoverlay');
+    if (f.delay) { const g = Object.assign({}, f, { delay: 0 }); setTimeout(() => fx(g), f.delay); return; }
+    if (f.type === 'banner') {
+      const b = $('banner');
+      b.textContent = f.text;
+      b.className = 'on' + (f.team === 1 ? ' t1' : '');
+      void b.offsetWidth; b.classList.add('go');
+      clearTimeout(bTimer);
+      bTimer = setTimeout(() => { b.className = ''; }, 2600);
+      return;
+    }
+    const o = $('xoverlay'), st = $('stage');
     if (f.type === 'strike') o.innerHTML = Array(f.n + 1).join('<div class="bigx">X</div>');
     else if (f.type === 'dup') o.innerHTML = '<div class="bigmsg">TRY AGAIN</div>';
     else return;
     o.classList.add('on');
+    st.classList.remove('shake'); void st.offsetWidth; st.classList.add('shake');
     clearTimeout(xTimer);
     xTimer = setTimeout(() => o.classList.remove('on'), 1400);
   }
@@ -112,7 +134,7 @@
     if (!m || m.type !== 'state' || m.id === lastId) return;
     lastId = m.id;
     render(m.state);
-    if (m.fx) fx(m.fx);
+    (m.fx || []).forEach(fx);
   }
   addEventListener('message', e => onMsg(e.data));
   if (bc) bc.onmessage = e => onMsg(e.data);
@@ -124,10 +146,15 @@
     ';animation-duration:' + (3 + Math.random() * 4) + 's;animation-delay:-' + (Math.random() * 6) + 's"></div>';
   $('confetti').innerHTML = ch;
 
+  // Chasing marquee bulbs along the top and bottom edges.
+  let bulbs = '';
+  for (let i = 0; i < 48; i++) bulbs += '<i style="animation-delay:' + (i % 4) * 0.2 + 's"></i>';
+  document.querySelectorAll('.bulbs').forEach(el => { el.innerHTML = bulbs; });
+
   // First paint: last saved game if there is one, then ask the control panel for the live state.
   let first = Engine.newState(DATA);
   try {
-    const saved = JSON.parse(localStorage.getItem('cbf_state_v1'));
+    const saved = JSON.parse(localStorage.getItem('cbf_state_v2'));
     if (saved && saved.sig === JSON.stringify(DATA).length) first = saved.state;
   } catch (e) {}
 
