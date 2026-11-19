@@ -76,3 +76,59 @@ category page the item appears on, and the file is
 - Three sources are known to be sample- or synth-based rather than live recordings:
   sting (GarageBand brass), fanfare_alt (MuseScore brass) and fmZero (a sampled real tuba note).
   Whether the Mixkit items are live recordings is not stated by Mixkit.
+
+## Audience reaction bank (numbered variants)
+
+Added 2026-11-19. The game picks randomly among the numbered variants. Every file below is
+**CC0 1.0** from Freesound (licence checked on each item's own page; no Mixkit, no CC-BY), is a
+different source recording from the others in its category, and none reuses the recordings
+behind applause.mp3, applauseLong.mp3, cheer.mp3 or aww.mp3. Same processing as above
+(-16 LUFS, MP3 44.1 kHz stereo 192 kbps, source = Freesound high-quality MP3 preview).
+Chosen from titles, descriptions, tags, ratings, durations and level envelopes only; nobody
+has listened to them yet.
+
+| File | Source title (uploader's description) | Author | Source page | Licence | Attribution required |
+|---|---|---|---|---|---|
+| applause1.mp3 | 400 people applauding a theatre show (theatre in Thuir, France) | Sadiquecat | https://freesound.org/s/795933/ | CC0 1.0 | No |
+| applause2.mp3 | Applause Crowd Theater.wav (applause in a big theater) | Jedo | https://freesound.org/s/396549/ | CC0 1.0 | No |
+| applause3.mp3 | Audience Applause/Clapping (auditorium, after a performance) | FynFyn | https://freesound.org/s/458535/ | CC0 1.0 | No |
+| applause4.mp3 | Concert audience applause 5 (music performance, medium intensity) | thaighaudio | https://freesound.org/s/478415/ | CC0 1.0 | No |
+| applause5.mp3 | Applause (audience in a local concert hall) | Kubuzz | https://freesound.org/s/334941/ | CC0 1.0 | No |
+| applause6.mp3 | Light Applause (little crowd after a show, El Konvent, Berga) | ojosdedurazno | https://freesound.org/s/391326/ | CC0 1.0 | No |
+| applauseLong1.mp3 | Crowd Cheering (medium crowd cheering, clapping and woo-ing) | SoundsExciting | https://freesound.org/s/365132/ | CC0 1.0 | No |
+| applauseLong2.mp3 | applause_and_whistle.flac (after a music contest performance, Kosice) | ondrosik | https://freesound.org/s/187673/ | CC0 1.0 | No |
+| applauseLong3.mp3 | applause cheer ext medium crowd enthusiastic whistling for outdoor show | kyles | https://freesound.org/s/455659/ | CC0 1.0 | No |
+| applauseLong4.mp3 | Cheer & Applause (end of a jazz concert, Berlin, 2025) | qubodup | https://freesound.org/s/830415/ | CC0 1.0 | No |
+| applauseLong5.mp3 | RoaringCrowd.wav (rock concert roaring audience) | benfree | https://freesound.org/s/130568/ | CC0 1.0 | No |
+| cheer1.mp3 | Short Crowd Cheer.flac (about 40 people at a small concert) | qubodup | https://freesound.org/s/182571/ | CC0 1.0 | No |
+| cheer2.mp3 | Small crowd cheering (about 300 people at a concert in Hungary) | misjoc | https://freesound.org/s/400590/ | CC0 1.0 | No |
+| cheer3.mp3 | BerlinGameScene.com Crowd Cheer 1 (Talk & Play event, Berlin) | BerlinGameScene | https://freesound.org/s/267249/ | CC0 1.0 | No (uploader asks for a "BerlinGameScene.com" credit as a courtesy) |
+| cheer4.mp3 | Voice_Crowd_Small_Expression_Applause_Cheer_Stereo (small crowd) | Nox_Sound | https://freesound.org/s/752709/ | CC0 1.0 | No |
+| cheer5.mp3 | yay.wav (small group cheering "yay") | dr_skitz | https://freesound.org/s/353923/ | CC0 1.0 | No |
+| cheer6.mp3 | Crowd Cheer (crowd cheering a win after a football match) | FoolBoyMedia | https://freesound.org/s/397434/ | CC0 1.0 | No |
+| aww1.mp3 | crowd `oh - - disappointed.mp3 (crowd disappointed) | mrrap4food | https://freesound.org/s/619007/ | CC0 1.0 | No |
+| aww2.mp3 | CRWDReac_Crowd Sigh In Disappointment (medium crowd sighing and groaning, GameSoundCon 2024 walla session) | ShangusBurger | https://freesound.org/s/763880/ | CC0 1.0 | No |
+| aww3.mp3 | Awww 1.wav (small audience, "pity and sympathy") | jayfrosting | https://freesound.org/s/333385/ | CC0 1.0 | No |
+| aww4.mp3 | Group Groan 2 (loop group giving a synchronised groan) | CHallSmith | https://freesound.org/s/870631/ | CC0 1.0 | No |
+| aww5.mp3 | Crowd Ouch.wav (small crowd reacting "ooh" to someone getting hurt; first of four reactions) | deleted_user_2104797 | https://freesound.org/s/324897/ | CC0 1.0 | No |
+| laugh1.mp3 | small audience laughter.wav (small fellowship hall) | cognito perceptu | https://freesound.org/s/17121/ | CC0 1.0 | No |
+| laugh2.mp3 | live audience comedy show genuine laughter_moderate.wav (live comedy show, no dialogue) | HowardV | https://freesound.org/s/581528/ | CC0 1.0 | No |
+| laugh3.mp3 | Crowd laugh.wav (genuine laugh from a small crowd) | deleted_user_2104797 | https://freesound.org/s/324894/ | CC0 1.0 | No |
+| laugh4.mp3 | Audience_laughing50.wav (small revue theatre, Vienna) | Alcappuccino | https://freesound.org/s/262983/ | CC0 1.0 | No |
+| laugh5.mp3 | Sitcom Laughter 9x, Small Audience (uploader's own stereo recording; one of the nine laughs) | Kinoton | https://freesound.org/s/383207/ | CC0 1.0 | No |
+| laugh5.mp3 (was laugh6) | Laughs_ses2.wav (300+ people, Freesound's "La audiencia disponible" session, Barcelona 2006) | freesound | https://freesound.org/s/25296/ | CC0 1.0 | No |
+
+Notes on the bank:
+
+- Each file is a single segment from its source; no source recording is used twice.
+- aww3 is the same small studio group (jayfrosting's pack) as the existing cheer.mp3, and aww5
+  and laugh3 come from the same uploader's small-crowd set, so those pairs may share voices.
+  cheer1 and applauseLong4 are both by qubodup but are different events and crowds.
+- aww2 and aww3 were very quiet at source (about -34 LUFS) and were raised about 18 dB, so
+  background hiss may be audible. aww4 is described by its uploader as "somewhat surreal"
+  (actors groaning in unison). aww5 is a wince ("ooh") rather than a pure "aww".
+- applauseLong5 is mostly a roaring concert crowd (cheering more than clapping).
+- applause6 measures about -18 LUFS (sparse close claps hit the peak limiter); the rest are
+  within about 1 LU of -16.
+- laugh5's page describes it as "laugh machine, canned laughter" with the uploader's own
+  microphone details; it is taken to be their own recording of a small audience, not a TV rip.
