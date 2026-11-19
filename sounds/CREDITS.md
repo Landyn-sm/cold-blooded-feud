@@ -115,7 +115,7 @@ has listened to them yet.
 | laugh2.mp3 | live audience comedy show genuine laughter_moderate.wav (live comedy show, no dialogue) | HowardV | https://freesound.org/s/581528/ | CC0 1.0 | No |
 | laugh3.mp3 | Crowd laugh.wav (genuine laugh from a small crowd) | deleted_user_2104797 | https://freesound.org/s/324894/ | CC0 1.0 | No |
 | laugh4.mp3 | Audience_laughing50.wav (small revue theatre, Vienna) | Alcappuccino | https://freesound.org/s/262983/ | CC0 1.0 | No |
-| laugh5.mp3 | Sitcom Laughter 9x, Small Audience (uploader's own stereo recording; one of the nine laughs) | Kinoton | https://freesound.org/s/383207/ | CC0 1.0 | No |
+| (not used: kept locally in alternates as laugh5_unverified.mp3) | Sitcom Laughter 9x, Small Audience (uploader's own stereo recording; one of the nine laughs) | Kinoton | https://freesound.org/s/383207/ | CC0 1.0 | No |
 | laugh5.mp3 (was laugh6) | Laughs_ses2.wav (300+ people, Freesound's "La audiencia disponible" session, Barcelona 2006) | freesound | https://freesound.org/s/25296/ | CC0 1.0 | No |
 
 Notes on the bank:
