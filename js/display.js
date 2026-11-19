@@ -159,7 +159,7 @@
     $('rc-mult').textContent = r.multiplier === 2 ? 'DOUBLE POINTS' : r.multiplier === 3 ? 'TRIPLE POINTS' : '';
 
     const fo = s.teams.map(t => t.players[s.roundIdx % t.players.length]);
-    $('rc-face').textContent = DATA.showFaceoffNames === false || fo.some(n => /^Player d+$/.test(n)) ? '' : 'FACE-OFF: ' + fo[0] + ' vs ' + fo[1];
+    $('rc-face').textContent = DATA.showFaceoffNames === false || fo.some(n => /^Player \d+$/.test(n)) ? '' : 'FACE-OFF: ' + fo[0] + ' vs ' + fo[1];
     paintDye(s.screen === 'roundcard' || s.screen === 'board' ? r.multiplier : 1);
 
     const fresh = boardKey !== s.roundIdx;
