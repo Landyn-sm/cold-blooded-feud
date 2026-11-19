@@ -146,6 +146,33 @@
     ';animation-duration:' + (3 + Math.random() * 4) + 's;animation-delay:-' + (Math.random() * 6) + 's"></div>';
   $('confetti').innerHTML = ch;
 
+  // Paint the tie-dye spiral once: three arms, wobbled so the bands look hand dyed.
+  (function () {
+    const c = $('dye'), N = 800, g = c.getContext('2d');
+    c.width = c.height = N;
+    const im = g.createImageData(N, N), d = im.data;
+    const P = [[11, 79, 122], [20, 121, 168], [42, 170, 226], [127, 211, 245], [176, 228, 249], [127, 211, 245], [42, 170, 226], [20, 121, 168]];
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const dx = x - N / 2, dy = y - N / 2, r = Math.sqrt(dx * dx + dy * dy), a = Math.atan2(dy, dx);
+      const n = Math.sin(x * 0.021 + Math.sin(y * 0.017) * 2.2) * 0.5 + Math.sin(y * 0.026 + Math.sin(x * 0.014) * 2.6) * 0.5 + Math.sin((x + y) * 0.09) * 0.12;
+      let t = a / (2 * Math.PI) * 3 + r * 0.0105 + n * 0.11;
+      t = ((t % 1) + 1) % 1 * P.length;
+      const i = Math.floor(t) % P.length, A = P[i], B = P[(i + 1) % P.length];
+      let f = t - Math.floor(t); f = f * f * (3 - 2 * f);
+      const o = (y * N + x) * 4;
+      d[o] = A[0] + (B[0] - A[0]) * f; d[o + 1] = A[1] + (B[1] - A[1]) * f; d[o + 2] = A[2] + (B[2] - A[2]) * f; d[o + 3] = 255;
+    }
+    g.putImageData(im, 0, 0);
+  })();
+
+  // Spiky starburst behind the round card.
+  let star = [];
+  for (let i = 0; i < 40; i++) {
+    const rr = i % 2 ? 50 : 41, an = i / 40 * 2 * Math.PI;
+    star.push((50 + rr * Math.cos(an)).toFixed(2) + '% ' + (50 + rr * Math.sin(an)).toFixed(2) + '%');
+  }
+  document.querySelectorAll('.star').forEach(el => { el.style.clipPath = 'polygon(' + star.join(',') + ')'; });
+
   // Chasing marquee bulbs along the top and bottom edges.
   let bulbs = '';
   for (let i = 0; i < 48; i++) bulbs += '<i style="animation-delay:' + (i % 4) * 0.2 + 's"></i>';
