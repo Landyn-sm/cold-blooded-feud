@@ -27,7 +27,7 @@
     const s = {
       screen: 'title',
       teams: data.teams.map(t => ({ name: t.name, players: t.players.slice(), score: 0 })),
-      roundIdx: 0, winner: null, rulesShown: 0, fm: freshFM(data)
+      roundIdx: 0, winner: null, rulesPage: 0, rulesShown: 0, fm: freshFM(data)
     };
     freshRound(s, data);
     return s;
@@ -59,15 +59,19 @@
         return { label: 'Declare the winner', a: { t: 'screen', v: 'winner' } };
       return { label: 'Start ' + data.rounds[s.roundIdx + 1].label, a: { t: 'gotoRound', i: s.roundIdx + 1 } };
     };
-    const rules = data.rules || [];
+    const pages = data.rulesPages || [];
     switch (s.screen) {
       case 'title': return { label: 'Introduce the teams', a: { t: 'screen', v: 'teams' } };
       case 'teams':
         if (s.phase === 'done') return afterRound();
-        if (rules.length) return { label: 'Explain the rules', a: { t: 'screen', v: 'rules' } };
+        if (pages.length) return { label: 'Explain the rules', a: { t: 'screen', v: 'rules' } };
         return { label: 'Start ' + data.rounds[s.roundIdx].label, a: { t: 'gotoRound', i: s.roundIdx } };
       case 'rules':
-        if (s.rulesShown < rules.length) return { label: 'Show rule ' + (s.rulesShown + 1) + ' of ' + rules.length, a: { t: 'ruleNext' } };
+      {
+        const pg = pages[s.rulesPage || 0], n = pg ? pg.items.length : 0;
+        if (s.rulesShown < n) return { label: 'Show rule ' + (s.rulesShown + 1) + ' of ' + n, a: { t: 'ruleNext' } };
+        if ((s.rulesPage || 0) + 1 < pages.length) return { label: 'Rules for ' + pages[s.rulesPage + 1].title, a: { t: 'rulePage' } };
+      }
         return { label: 'Start ' + data.rounds[s.roundIdx].label, a: { t: 'gotoRound', i: s.roundIdx } };
       case 'roundcard': return { label: 'Show the board', a: { t: 'screen', v: 'board' } };
       case 'board':
@@ -103,11 +107,15 @@
           out.sounds.push('fanfare', 'cheer@300', 'applauseLong@700');
         } else if (a.v === 'outro') out.sounds.push('whoosh', 'cheer@200', 'applauseLong@500');
         else out.sounds.push('whoosh');
-        if (a.v === 'rules') s.rulesShown = 0;
+        if (a.v === 'rules') { s.rulesShown = 0; s.rulesPage = 0; }
         break;
 
       case 'ruleNext':
-        if (s.rulesShown < (data.rules || []).length) { s.rulesShown++; out.sounds.push('fmReveal'); }
+        if (s.rulesShown < ((data.rulesPages || [])[s.rulesPage || 0] || { items: [] }).items.length) { s.rulesShown++; out.sounds.push('fmReveal'); }
+        break;
+
+      case 'rulePage':
+        if ((s.rulesPage || 0) + 1 < (data.rulesPages || []).length) { s.rulesPage = (s.rulesPage || 0) + 1; s.rulesShown = 0; out.sounds.push('whoosh'); }
         break;
 
       case 'gotoRound':

@@ -12,15 +12,31 @@
   winScore: 300,            // first team to this score wins the main game
   stealAddsAnswer: false,   // false = a steal wins the pot only (current TV rule)
 
-  // The rules slide. Each one pops up when the judge presses NEXT.
-  rulesTitle: 'HOW TO PLAY',
-  rules: [
-    'FACE-OFF: one player from each team. Fastest buzzer answers first.',
-    'The higher answer wins control. That team can PLAY or PASS.',
-    'Guess every answer on the board. Three wrong answers and you are out.',
-    'Three strikes? The other team gets ONE guess to STEAL the points.',
-    'Round 3 is worth DOUBLE points. Round 4 is worth TRIPLE.',
-    'First team to 300 wins and plays the LIGHTNING ROUND.'
+  // The rules slides. Each line pops up when the judge presses NEXT. Up to 7 lines per page.
+  rulesPages: [
+    {
+      title: 'HOW TO PLAY',
+      items: [
+        'We surveyed our customers. Their top answers are hidden on the board.',
+        'The more people who gave an answer, the more points it is worth.',
+        'FACE-OFF: one player from each team. Fastest buzzer answers first.',
+        'The higher answer wins control. That team can PLAY or PASS.',
+        'Players answer one at a time, no helping. Three wrong answers and you are out.',
+        'Three strikes? The other team huddles up for ONE guess to STEAL the points.',
+        'Round 3 is DOUBLE points, Round 4 is TRIPLE. First team to 300 wins!'
+      ]
+    },
+    {
+      title: 'THE LIGHTNING ROUND',
+      items: [
+        'The winning team sends up two players to chase one last big win.',
+        'Player 1 gets 20 seconds to answer 5 quick questions. Player 2 cannot listen.',
+        'Each answer scores points for how many people in our survey said it.',
+        'Then player 2 gets 25 seconds to answer the same 5 questions.',
+        'No repeats! If player 2 matches player 1, they hear a buzz and must try again.',
+        'If the two players reach 200 points together, the team wins it all!'
+      ]
+    }
   ],
 
   // The closing screen after the lightning round.

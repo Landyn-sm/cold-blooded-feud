@@ -81,14 +81,16 @@
   const btn = (label, c, attrs, cls) => '<button tabindex="-1" data-c="' + c + '" ' + (attrs || '') + ' class="' + (cls || '') + '">' + label + '</button>';
   const tbtn = (i, label, c, cls) => btn(label, c, 'data-team="' + i + '"', (cls || '') + ' team' + i);
 
+  function rulesPage() { return (DATA.rulesPages || [])[state.rulesPage || 0] || { title: 'Rules', items: [] }; }
+
   function whatNow() {
     const T = state.teams, c = state.control, r = DATA.rounds[state.roundIdx], F = DATA.fastMoney;
     switch (state.screen) {
       case 'title': return 'Title screen is up. Press GO LIVE to open the game screen and start the theme.';
       case 'teams': return 'Team rosters are on screen.';
-      case 'rules': return state.rulesShown < (DATA.rules || []).length
+      case 'rules': return state.rulesShown < rulesPage().items.length
         ? 'Rules slide. Press NEXT each time you start explaining a rule and it pops up behind you.'
-        : 'All the rules are showing. Press NEXT to start the game.';
+        : 'Every rule on this slide is showing. Press NEXT to move on.';
       case 'outro': return 'Closing screen is up with the theme. That is the show!';
       case 'roundcard': return r.label + ' card is showing. The board comes up by itself in a moment.';
       case 'winner': return 'Winner screen is up.';
@@ -179,8 +181,8 @@
   }
 
   function simplePanel() {
-    if (state.screen === 'rules') return '<div class="card"><h2>' + esc(DATA.rulesTitle || 'Rules') + '</h2>' +
-      (DATA.rules || []).map((r, i) => '<p class="' + (i < state.rulesShown ? '' : 'dim') + '"><b>' + (i + 1) + '.</b> ' + esc(r) + '</p>').join('') + '</div>';
+    if (state.screen === 'rules') return '<div class="card"><h2>' + esc(rulesPage().title) + '</h2>' +
+      rulesPage().items.map((r, i) => '<p class="' + (i < state.rulesShown ? '' : 'dim') + '"><b>' + (i + 1) + '.</b> ' + esc(r) + '</p>').join('') + '</div>';
     if (state.screen !== 'teams') return '';
     return '<div class="card"><h2>Player names</h2><div class="cols">' + state.teams.map((t, i) =>
       '<div class="bar">' + t.players.map((p, k) => '<input id="pl' + i + '_' + k + '" data-b="player" data-team="' + i + '" data-i="' + k + '" value="' + esc(p) + '" style="width:112px">').join('') + '</div>').join('') + '</div></div>';

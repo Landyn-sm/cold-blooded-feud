@@ -4,7 +4,7 @@
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const bc = 'BroadcastChannel' in window ? new BroadcastChannel('cbf') : null;
-  let lastId = null, boardKey = null, xTimer = null, bTimer = null, lastScreen = null;
+  let rulesKey = null, lastId = null, boardKey = null, xTimer = null, bTimer = null, lastScreen = null;
 
   function fit() {
     const s = Math.min(innerWidth / 1920, innerHeight / 1080);
@@ -69,10 +69,14 @@
       el.querySelector('.tstatus').textContent = stealing ? 'STEAL' : playing ? 'PLAYING' : '';
     });
 
-    $('ru-title').textContent = DATA.rulesTitle || 'HOW TO PLAY';
-    const rl = DATA.rules || [];
-    if ($('ru-list').children.length !== rl.length)
-      $('ru-list').innerHTML = rl.map((t, i) => '<div class="rule"><b>' + (i + 1) + '</b><span>' + esc(t) + '</span></div>').join('');
+    const pg = (DATA.rulesPages || [])[s.rulesPage || 0] || { title: '', items: [] };
+    $('ru-title').textContent = pg.title;
+    if (rulesKey !== (s.rulesPage || 0)) {
+      rulesKey = s.rulesPage || 0;
+      $('ru-list').className = pg.items.length > 6 ? 'tight' : '';
+      $('ru-list').innerHTML = pg.items.map((t, i) => '<div class="rule"><b>' + (i + 1) + '</b><span>' + esc(t) + '</span></div>').join('');
+      void $('ru-list').offsetWidth;
+    }
     Array.prototype.forEach.call($('ru-list').children, (el, i) => el.classList.toggle('show', i < (s.rulesShown || 0)));
 
     $('rc-label').textContent = r.label;
@@ -208,9 +212,10 @@
     ['Bearded dragon', 'Crickets', 'No heat lamp', 'Goldfish', 'Zeus'].forEach((t, q) => {
       first.fm.answers[0][q] = { said: t, match: q % 3, text: true, pts: q < 4 };
     });
-    first.fm.timeLeft = 4; first.rulesShown = 5; if (demo === 'outro') first.fm.won = true;
+    first.fm.timeLeft = 4; first.rulesShown = 7; first.rulesPage = +(new URLSearchParams(location.search).get('page') || 0); if (demo === 'outro') first.fm.won = true;
   }
   render(first);
+  if (demo && new URLSearchParams(location.search).get('x')) { $('xoverlay').innerHTML = Array(4).join('<div class="bigx">X</div>'); $('xoverlay').classList.add('on'); $('banner').textContent = 'TEAM CRABS CAN STEAL!'; $('banner').className = 'on t1'; }
 
   const hello = { type: 'hello' };
   if (window.opener) { try { window.opener.postMessage(hello, '*'); } catch (e) {} }
