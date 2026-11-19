@@ -37,7 +37,7 @@
     playSounds(out.sounds);
     if (a.t === 'screen') {
       if (a.v === 'winner') { SFX.music(false); setTimeout(() => { if (state.screen === 'winner') { SFX.music(true); render(); } }, 4500); }
-      else SFX.music(a.v === 'title' || a.v === 'teams' || a.v === 'outro');
+      else SFX.music(a.v === 'title' || a.v === 'teams' || a.v === 'outro' || a.v === 'break');
     }
     if (a.t === 'gotoRound') {
       SFX.music(false);
@@ -91,6 +91,7 @@
       case 'rules': return state.rulesShown < rulesPage().items.length
         ? 'Rules slide. Press NEXT each time you start explaining a rule and it pops up behind you.'
         : 'Every rule on this slide is showing. Press NEXT to move on.';
+      case 'break': return 'The "Be right back" screen is up with music. Press NEXT to pick up where you left off.';
       case 'outro': return 'Closing screen is up with the theme. That is the show!';
       case 'roundcard': return r.label + ' card is showing. The board comes up by itself in a moment.';
       case 'winner': return 'Winner screen is up.';
@@ -190,7 +191,7 @@
 
   function more() {
     const T = state.teams;
-    const list = [['title', 'Title'], ['teams', 'Teams'], ['rules', 'Rules'], ['board', 'Board'], ['winner', 'Winner'], ['fm', DATA.fastMoney.label], ['outro', 'Closing']];
+    const list = [['title', 'Title'], ['teams', 'Teams'], ['rules', 'Rules'], ['board', 'Board'], ['winner', 'Winner'], ['fm', DATA.fastMoney.label], ['outro', 'Closing'], ['break', 'Be right back']];
     const snd = [['applause', 'Applause'], ['applauseLong', 'Big applause'], ['cheer', 'Cheer'], ['laugh', 'Laugh'], ['aww', 'Aww'], ['drumroll', 'Drumroll'],
       ['womp', 'Sad horn'], ['sting', 'Sting'], ['fanfare', 'Fanfare'], ['buzzer', 'Buzzer'], ['ding', 'Ding']];
     return '<details class="card" id="more"' + (moreOpen ? ' open' : '') + '><summary>More controls: sounds, fix a score, jump around</summary>' +

@@ -78,6 +78,7 @@
         if (s.phase !== 'done') return null;
         if (!s.revealed.every(Boolean)) return { label: 'Reveal the answers nobody got', a: { t: 'revealRest' } };
         return afterRound();
+      case 'break': return { label: 'Back to the show', a: { t: 'screen', v: s.prevScreen || 'title' } };
       case 'winner': return { label: 'Start the ' + data.fastMoney.label, a: { t: 'screen', v: 'fm' } };
       case 'fm':
         if (s.fm.won || s.fm.lost) return { label: 'Close the show', a: { t: 'screen', v: 'outro' } };
@@ -101,6 +102,7 @@
 
     switch (a.t) {
       case 'screen':
+        if (a.v === 'break' && s.screen !== 'break') s.prevScreen = s.screen;
         s.screen = a.v;
         if (a.v === 'winner') {
           s.winner = s.teams[0].score >= s.teams[1].score ? 0 : 1;
@@ -156,15 +158,15 @@
           const t = 1 - s.control;
           award(t);
           out.sounds.push('ding', 'cheer@250', 'applause@500');
-          banner('STOLEN! ' + s.teams[t].name + ' +' + s.pot, t, 500);
+          banner('STOLEN! ' + s.teams[t].name + ' +' + s.pot, t, 500); out.fx.push({ type: 'confetti', n: 90, delay: 500 });
         } else {
           s.pot += pts; s.counted[i] = pts;
-          if (i === 0) { out.sounds.push('dingTop', 'applause@200'); banner('NUMBER ONE ANSWER!', s.control); }
+          if (i === 0) { out.sounds.push('dingTop', 'applause@200'); banner('NUMBER ONE ANSWER!', s.control); out.fx.push({ type: 'confetti', n: 50 }); }
           else out.sounds.push('ding');
           if (s.phase === 'play' && s.revealed.every(Boolean)) {
             award(s.control);
             out.sounds.push('cheer@500', 'applauseLong@800');
-            banner('CLEAN SWEEP! ' + s.teams[s.control].name + ' +' + s.pot, s.control, 900);
+            banner('CLEAN SWEEP! ' + s.teams[s.control].name + ' +' + s.pot, s.control, 900); out.fx.push({ type: 'confetti', n: 120, delay: 900 });
           }
         }
         break;
@@ -220,7 +222,7 @@
         if (!s.fm.won && total >= data.fastMoney.target) {
           s.fm.won = true;
           out.sounds.push('fanfare@400', 'cheer@600', 'applauseLong@900');
-          banner('WINNER! ' + total + ' POINTS', null, 400);
+          banner('WINNER! ' + total + ' POINTS', null, 400); out.fx.push({ type: 'confetti', n: 150, delay: 400 });
         } else if (p === 1 && !s.fm.won && !E.fmNextStep(s, 1)) {
           s.fm.lost = true;
           out.sounds.push('womp@700', 'aww@900');

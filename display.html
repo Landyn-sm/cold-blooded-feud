@@ -154,8 +154,38 @@ html, body { width: 100%; height: 100%; background: #000; overflow: hidden; curs
 @keyframes tpop { 35% { transform: scale(1.09) rotate(-1.5deg); } }
 .bump { animation: bump .5s; }
 @keyframes bump { 40% { transform: scale(1.18) rotate(-3deg); } }
-.screen.enter .mega, #s-roundcard.enter #rc-label, #s-winner.enter #w-name { animation: zoom .6s cubic-bezier(.2,1.7,.4,1) both; }
+#s-roundcard.enter #rc-label, #s-winner.enter #w-name, #s-break.enter .mega { animation: zoom .6s cubic-bezier(.2,1.7,.4,1) both; }
 #s-roundcard.enter #rc-mult { animation: zoom .6s .3s cubic-bezier(.2,1.7,.4,1) both; }
+#s-roundcard.enter #rc-face { animation: zoom .6s .6s cubic-bezier(.2,1.7,.4,1) both; }
+#s-title.enter .logo-card { animation: slam .5s cubic-bezier(.3,1.4,.5,1) both; }
+#s-title.enter .logo-card.c { animation-delay: .18s; }
+#s-title.enter .vs { animation: zoom .4s .36s cubic-bezier(.2,1.9,.4,1) both; }
+.mega .w { display: inline-block; white-space: nowrap; }
+#s-title.enter .mega .w { animation: drop .55s cubic-bezier(.2,1.5,.4,1) both; }
+#s-title.enter .sub { animation: rise .45s 1.1s cubic-bezier(.2,1.5,.4,1) both; }
+#s-title.enter .tag { animation: rise .45s 1.3s cubic-bezier(.2,1.5,.4,1) both; }
+@keyframes slam { from { scale: 3.5; opacity: 0; } }
+@keyframes drop { from { translate: 0 -760px; rotate: -14deg; } }
+@keyframes rise { from { translate: 0 90px; opacity: 0; } }
+
+.float { position: absolute; z-index: 5; font-weight: 900; font-size: 116px; line-height: 1; color: #fff; -webkit-text-stroke: 14px var(--ink); paint-order: stroke fill;
+  animation: floatup 1.3s cubic-bezier(.2,1,.4,1) both; pointer-events: none; }
+@keyframes floatup { 0% { scale: .3; opacity: 0; } 18% { scale: 1.25; opacity: 1; rotate: -6deg; } 70% { opacity: 1; } 100% { translate: 0 -170px; opacity: 0; } }
+.fly { position: absolute; left: 960px; top: 96px; z-index: 6; font-weight: 900; font-size: 140px; line-height: 1; color: var(--gold); -webkit-text-stroke: 16px var(--ink); paint-order: stroke fill; }
+.confb { position: absolute; top: 560px; z-index: 25; width: 22px; height: 32px; border: 3px solid var(--ink); }
+
+.tlogo { position: absolute; top: -96px; left: 50%; margin-left: -76px; width: 152px; height: 152px; border-radius: 50%; background: #fff; border: 8px solid var(--ink); overflow: hidden; box-shadow: 6px 7px 0 var(--drop); }
+.tlogo img { width: 100%; height: 100%; object-fit: contain; transform: scale(1.75); }
+.t0 .tlogo img { transform: scale(2.15); }
+.crown { position: absolute; top: -168px; left: 50%; margin-left: -20px; width: 120px; height: 78px; rotate: 16deg; scale: 0; transition: scale .45s cubic-bezier(.2,1.9,.4,1);
+  filter: drop-shadow(5px 0 0 var(--ink)) drop-shadow(-5px 0 0 var(--ink)) drop-shadow(0 5px 0 var(--ink)) drop-shadow(0 -5px 0 var(--ink)); }
+.crown i { display: block; width: 100%; height: 100%; background: var(--gold); clip-path: polygon(0 100%, 0 12%, 26% 55%, 50% 0, 74% 55%, 100% 12%, 100% 100%); }
+.team.lead .crown { scale: 1; }
+.t1 .crown i { background: var(--orange); }
+#rc-face { position: relative; font-size: 60px; margin-top: 30px; background: var(--cream); border: 7px solid var(--ink); border-radius: 12px; padding: 0 30px 6px; transform: rotate(-3deg); max-width: 900px; }
+#rc-face:empty { display: none; }
+#fm-tnum { width: 124px; height: 124px; border-radius: 50%; background: var(--cream); border: 7px solid var(--ink); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 84px; padding-bottom: 8px; }
+#bk-title { margin-top: 40px; }
 #s-teams.enter .roster.t0 { animation: inL .55s cubic-bezier(.2,1.3,.4,1) both; }
 #s-teams.enter .roster.t1 { animation: inR .55s cubic-bezier(.2,1.3,.4,1) both; }
 #s-board.enter #grid .tile { animation: zoom .45s cubic-bezier(.2,1.5,.4,1) both; }
@@ -171,8 +201,8 @@ html, body { width: 100%; height: 100%; background: #000; overflow: hidden; curs
 .fmtext { flex: 1; display: flex; align-items: center; padding: 0 0 6px 24px; font-size: 54px; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
 .fmpts { width: 140px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 68px; background: var(--ink); color: var(--gold); padding-bottom: 8px; }
 #fm-bottom { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; align-items: center; gap: 70px; }
-#fm-timer { width: 180px; height: 180px; border-radius: 50%; border: 9px solid var(--ink); background: var(--gold); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 116px; padding-bottom: 12px; box-shadow: 8px 9px 0 var(--drop); }
-#fm-timer.low { background: var(--red); color: #fff; animation: bump .5s infinite; }
+#fm-timer { width: 180px; height: 180px; border-radius: 50%; border: 9px solid var(--ink); background: var(--gold); display: flex; align-items: center; justify-content: center; box-shadow: 8px 9px 0 var(--drop); }
+#fm-timer.low { animation: bump .5s infinite; }
 #fm-total { font-weight: 900; font-size: 100px; background: var(--ink); color: #fff; border: 8px solid #fff; border-radius: 20px; padding: 0 44px 12px; box-shadow: 10px 12px 0 var(--drop); }
 #fm-total b { color: var(--gold); }
 #fm-total.won { animation: wig .5s ease-in-out infinite alternate; }
@@ -224,16 +254,21 @@ html, body { width: 100%; height: 100%; background: #000; overflow: hidden; curs
     <div id="o-line"></div>
   </section>
 
+  <section id="s-break" class="screen center">
+    <div class="mega ink">BE RIGHT BACK</div>
+    <div class="sub ribbon" id="bk-title"></div>
+  </section>
+
   <section id="s-roundcard" class="screen center">
     <div class="burst star"></div><div class="burst in star"></div>
-    <div id="rc-label" class="ink"></div><div id="rc-mult" class="ribbon"></div>
+    <div id="rc-label" class="ink"></div><div id="rc-mult" class="ribbon"></div><div id="rc-face"></div>
   </section>
 
   <section id="s-board" class="screen">
     <div id="potwrap"><div id="roundlabel"></div><div id="pot">0</div></div>
     <div id="question"></div>
-    <div class="team t0" id="team0"><div class="tname"></div><div class="tscore">0</div><div class="tstatus"></div></div>
-    <div class="team t1" id="team1"><div class="tname"></div><div class="tscore">0</div><div class="tstatus"></div></div>
+    <div class="team t0" id="team0"><div class="crown"><i></i></div><div class="tlogo"><img src="assets/tdi-logo.png" alt=""></div><div class="tname"></div><div class="tscore">0</div><div class="tstatus"></div></div>
+    <div class="team t1" id="team1"><div class="crown"><i></i></div><div class="tlogo"><img src="assets/crabs-logo.png" alt=""></div><div class="tname"></div><div class="tscore">0</div><div class="tstatus"></div></div>
     <div id="boardframe"></div>
     <div id="grid"></div>
     <div id="strikes"><div class="sx">X</div><div class="sx">X</div><div class="sx">X</div></div>
@@ -242,7 +277,7 @@ html, body { width: 100%; height: 100%; background: #000; overflow: hidden; curs
   <section id="s-fm" class="screen">
     <div id="fm-title" class="ink"></div>
     <div id="fm-cols"><div class="fmcol" id="fm-c0"></div><div class="fmcol" id="fm-c1"></div></div>
-    <div id="fm-bottom"><div id="fm-timer"></div><div id="fm-total"></div></div>
+    <div id="fm-bottom"><div id="fm-timer"><div id="fm-tnum"></div></div><div id="fm-total"></div></div>
   </section>
 
   <section id="s-winner" class="screen center">
