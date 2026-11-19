@@ -12,6 +12,21 @@
   winScore: 300,            // first team to this score wins the main game
   stealAddsAnswer: false,   // false = a steal wins the pot only (current TV rule)
 
+  // The rules slide. Each one pops up when the judge presses NEXT.
+  rulesTitle: 'HOW TO PLAY',
+  rules: [
+    'FACE-OFF: one player from each team. Fastest buzzer answers first.',
+    'The higher answer wins control. That team can PLAY or PASS.',
+    'Guess every answer on the board. Three wrong answers and you are out.',
+    'Three strikes? The other team gets ONE guess to STEAL the points.',
+    'Round 3 is worth DOUBLE points. Round 4 is worth TRIPLE.',
+    'First team to 300 wins and plays the LIGHTNING ROUND.'
+  ],
+
+  // The closing screen after the lightning round.
+  closingTitle: 'THANKS FOR PLAYING!',
+  closingLine: 'See you at The Tye-Dyed Iguana and the next C.R.A.B.S. show',
+
   teams: [
     { name: 'TEAM TDI',   players: ['Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5'] },
     { name: 'TEAM CRABS', players: ['Player 1', 'Player 2', 'Player 3', 'Player 4', 'Player 5'] }

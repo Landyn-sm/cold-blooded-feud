@@ -227,9 +227,45 @@ const SFX = (function () {
     }
   }
 
+  /*
+    Crowd bank. Any of these names can have numbered variants in the sounds folder
+    (applause1.mp3, applause2.mp3 ... up to 12). One is picked at random each time,
+    and a variant is never reused until at least 3 others have played.
+  */
+  const BANK = ['applause', 'applauseLong', 'cheer', 'aww', 'laugh'];
+  const bank = {}, recent = {};
+  BANK.forEach(n => {
+    bank[n] = []; recent[n] = [];
+    for (let i = 1; i <= 12; i++) {
+      try {
+        const a = new Audio();
+        a.preload = 'auto';
+        a.addEventListener('canplaythrough', () => { bank[n].push(a); }, { once: true });
+        a.addEventListener('error', () => {});
+        a.src = 'sounds/' + n + i + '.mp3';
+      } catch (e) {}
+    }
+  });
+
+  function pickCrowd(name) {
+    const pool = bank[name].slice();
+    if (over[name]) pool.push(over[name]);
+    if (!pool.length) return null;
+    const keep = Math.min(3, pool.length - 1);
+    const fresh = pool.filter(a => recent[name].indexOf(a) < 0);
+    const a = fresh[Math.floor(Math.random() * fresh.length)] || pool[0];
+    recent[name].push(a);
+    while (recent[name].length > keep) recent[name].shift();
+    return a;
+  }
+
   function play(name, delayMs) {
     init();
     if (delayMs) { setTimeout(() => play(name), delayMs); return; }
+    if (bank[name]) {
+      const a = pickCrowd(name);
+      if (a) { const c = a.cloneNode(); c.volume = vol; c.play().catch(() => {}); return; }
+    }
     if (over[name]) { const c = over[name].cloneNode(); c.volume = vol; c.play().catch(() => {}); return; }
     if (S[name]) S[name]();
   }

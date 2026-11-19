@@ -1,7 +1,7 @@
 /* The control center: the laptop side. Every click here drives the game screen. */
 (function () {
   const DATA = Engine.prep(window.GAME_DATA);
-  const KEY = 'cbf_state_v2', SIG = JSON.stringify(DATA).length;
+  const KEY = 'cbf_state_v3', SIG = JSON.stringify(DATA).length;
   const $ = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const bc = 'BroadcastChannel' in window ? new BroadcastChannel('cbf') : null;
@@ -37,7 +37,7 @@
     playSounds(out.sounds);
     if (a.t === 'screen') {
       if (a.v === 'winner') { SFX.music(false); setTimeout(() => { if (state.screen === 'winner') { SFX.music(true); render(); } }, 4500); }
-      else SFX.music(a.v === 'title' || a.v === 'teams');
+      else SFX.music(a.v === 'title' || a.v === 'teams' || a.v === 'outro');
     }
     if (a.t === 'gotoRound') {
       SFX.music(false);
@@ -86,12 +86,16 @@
     switch (state.screen) {
       case 'title': return 'Title screen is up. Press GO LIVE to open the game screen and start the theme.';
       case 'teams': return 'Team rosters are on screen.';
+      case 'rules': return state.rulesShown < (DATA.rules || []).length
+        ? 'Rules slide. Press NEXT each time you start explaining a rule and it pops up behind you.'
+        : 'All the rules are showing. Press NEXT to start the game.';
+      case 'outro': return 'Closing screen is up with the theme. That is the show!';
       case 'roundcard': return r.label + ' card is showing. The board comes up by itself in a moment.';
       case 'winner': return 'Winner screen is up.';
       case 'fm': {
         const p = state.fm.stage, step = Engine.fmNextStep(state, p);
-        if (state.fm.won) return 'They hit ' + F.target + '. They win!';
-        if (state.fm.lost) return 'All answers revealed. They came up short.';
+        if (state.fm.won) return 'They hit ' + F.target + '. They win! Press NEXT to close the show.';
+        if (state.fm.lost) return 'All answers revealed. They came up short. Press NEXT to close the show.';
         if (!step) return 'Player 1 is done. Press NEXT to bring out player 2.';
         return 'Player ' + (p + 1) + ': start the clock, type their 5 answers, match them, then press REVEAL for each one.';
       }
@@ -175,6 +179,8 @@
   }
 
   function simplePanel() {
+    if (state.screen === 'rules') return '<div class="card"><h2>' + esc(DATA.rulesTitle || 'Rules') + '</h2>' +
+      (DATA.rules || []).map((r, i) => '<p class="' + (i < state.rulesShown ? '' : 'dim') + '"><b>' + (i + 1) + '.</b> ' + esc(r) + '</p>').join('') + '</div>';
     if (state.screen !== 'teams') return '';
     return '<div class="card"><h2>Player names</h2><div class="cols">' + state.teams.map((t, i) =>
       '<div class="bar">' + t.players.map((p, k) => '<input id="pl' + i + '_' + k + '" data-b="player" data-team="' + i + '" data-i="' + k + '" value="' + esc(p) + '" style="width:112px">').join('') + '</div>').join('') + '</div></div>';
@@ -182,8 +188,8 @@
 
   function more() {
     const T = state.teams;
-    const list = [['title', 'Title'], ['teams', 'Teams'], ['board', 'Board'], ['fm', DATA.fastMoney.label], ['winner', 'Winner']];
-    const snd = [['applause', 'Applause'], ['applauseLong', 'Big applause'], ['cheer', 'Cheer'], ['aww', 'Aww'], ['drumroll', 'Drumroll'],
+    const list = [['title', 'Title'], ['teams', 'Teams'], ['rules', 'Rules'], ['board', 'Board'], ['winner', 'Winner'], ['fm', DATA.fastMoney.label], ['outro', 'Closing']];
+    const snd = [['applause', 'Applause'], ['applauseLong', 'Big applause'], ['cheer', 'Cheer'], ['laugh', 'Laugh'], ['aww', 'Aww'], ['drumroll', 'Drumroll'],
       ['womp', 'Sad horn'], ['sting', 'Sting'], ['fanfare', 'Fanfare'], ['buzzer', 'Buzzer'], ['ding', 'Ding']];
     return '<details class="card" id="more"' + (moreOpen ? ' open' : '') + '><summary>More controls: sounds, fix a score, jump around</summary>' +
       '<h3>Sound board</h3><div class="bar">' +

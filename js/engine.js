@@ -27,7 +27,7 @@
     const s = {
       screen: 'title',
       teams: data.teams.map(t => ({ name: t.name, players: t.players.slice(), score: 0 })),
-      roundIdx: 0, winner: null, fm: freshFM(data)
+      roundIdx: 0, winner: null, rulesShown: 0, fm: freshFM(data)
     };
     freshRound(s, data);
     return s;
@@ -59,10 +59,16 @@
         return { label: 'Declare the winner', a: { t: 'screen', v: 'winner' } };
       return { label: 'Start ' + data.rounds[s.roundIdx + 1].label, a: { t: 'gotoRound', i: s.roundIdx + 1 } };
     };
+    const rules = data.rules || [];
     switch (s.screen) {
       case 'title': return { label: 'Introduce the teams', a: { t: 'screen', v: 'teams' } };
       case 'teams':
-        return s.phase === 'done' ? afterRound() : { label: 'Start ' + data.rounds[s.roundIdx].label, a: { t: 'gotoRound', i: s.roundIdx } };
+        if (s.phase === 'done') return afterRound();
+        if (rules.length) return { label: 'Explain the rules', a: { t: 'screen', v: 'rules' } };
+        return { label: 'Start ' + data.rounds[s.roundIdx].label, a: { t: 'gotoRound', i: s.roundIdx } };
+      case 'rules':
+        if (s.rulesShown < rules.length) return { label: 'Show rule ' + (s.rulesShown + 1) + ' of ' + rules.length, a: { t: 'ruleNext' } };
+        return { label: 'Start ' + data.rounds[s.roundIdx].label, a: { t: 'gotoRound', i: s.roundIdx } };
       case 'roundcard': return { label: 'Show the board', a: { t: 'screen', v: 'board' } };
       case 'board':
         if (s.phase !== 'done') return null;
@@ -70,6 +76,7 @@
         return afterRound();
       case 'winner': return { label: 'Start the ' + data.fastMoney.label, a: { t: 'screen', v: 'fm' } };
       case 'fm':
+        if (s.fm.won || s.fm.lost) return { label: 'Close the show', a: { t: 'screen', v: 'outro' } };
         if (s.fm.stage === 0 && !E.fmNextStep(s, 0)) return { label: 'Player 2 comes out', a: { t: 'fmStage', v: 1 } };
         return null;
     }
@@ -94,7 +101,13 @@
         if (a.v === 'winner') {
           s.winner = s.teams[0].score >= s.teams[1].score ? 0 : 1;
           out.sounds.push('fanfare', 'cheer@300', 'applauseLong@700');
-        } else out.sounds.push('whoosh');
+        } else if (a.v === 'outro') out.sounds.push('whoosh', 'cheer@200', 'applauseLong@500');
+        else out.sounds.push('whoosh');
+        if (a.v === 'rules') s.rulesShown = 0;
+        break;
+
+      case 'ruleNext':
+        if (s.rulesShown < (data.rules || []).length) { s.rulesShown++; out.sounds.push('fmReveal'); }
         break;
 
       case 'gotoRound':

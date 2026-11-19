@@ -69,6 +69,12 @@
       el.querySelector('.tstatus').textContent = stealing ? 'STEAL' : playing ? 'PLAYING' : '';
     });
 
+    $('ru-title').textContent = DATA.rulesTitle || 'HOW TO PLAY';
+    const rl = DATA.rules || [];
+    if ($('ru-list').children.length !== rl.length)
+      $('ru-list').innerHTML = rl.map((t, i) => '<div class="rule"><b>' + (i + 1) + '</b><span>' + esc(t) + '</span></div>').join('');
+    Array.prototype.forEach.call($('ru-list').children, (el, i) => el.classList.toggle('show', i < (s.rulesShown || 0)));
+
     $('rc-label').textContent = r.label;
     $('rc-mult').textContent = r.multiplier === 2 ? 'DOUBLE POINTS' : r.multiplier === 3 ? 'TRIPLE POINTS' : '';
 
@@ -103,10 +109,16 @@
     $('fm-total').innerHTML = 'TOTAL <b>' + total + '</b>';
     $('fm-total').classList.toggle('won', !!s.fm.won);
 
+    $('o-title').textContent = DATA.closingTitle || 'THANKS FOR PLAYING!';
+    $('o-line').textContent = DATA.closingLine || '';
+    $('o-result').textContent = s.fm.won ? 'LIGHTNING ROUND WON WITH ' + total + ' POINTS'
+      : s.fm.lost ? 'LIGHTNING ROUND: ' + total + ' POINTS' : '';
+
     const w = s.winner == null ? (s.teams[0].score >= s.teams[1].score ? 0 : 1) : s.winner;
     $('w-name').textContent = s.teams[w].name;
     $('w-name').style.color = w === 1 ? 'var(--orange)' : 'var(--gold)';
     $('w-score').textContent = s.teams[w].score + ' POINTS';
+    $('o-champ').textContent = 'CHAMPIONS: ' + s.teams[w].name;
   }
 
   function fx(f) {
@@ -181,7 +193,7 @@
   // First paint: last saved game if there is one, then ask the control panel for the live state.
   let first = Engine.newState(DATA);
   try {
-    const saved = JSON.parse(localStorage.getItem('cbf_state_v2'));
+    const saved = JSON.parse(localStorage.getItem('cbf_state_v3'));
     if (saved && saved.sig === JSON.stringify(DATA).length) first = saved.state;
   } catch (e) {}
 
@@ -196,7 +208,7 @@
     ['Bearded dragon', 'Crickets', 'No heat lamp', 'Goldfish', 'Zeus'].forEach((t, q) => {
       first.fm.answers[0][q] = { said: t, match: q % 3, text: true, pts: q < 4 };
     });
-    first.fm.timeLeft = 4;
+    first.fm.timeLeft = 4; first.rulesShown = 5; if (demo === 'outro') first.fm.won = true;
   }
   render(first);
 

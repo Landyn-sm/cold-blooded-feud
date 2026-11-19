@@ -53,6 +53,25 @@ html, body { width: 100%; height: 100%; background: #000; overflow: hidden; curs
 .roster ul { padding: 18px 0 24px; }
 .roster li { list-style: none; font-size: 60px; padding: 4px 0; }
 
+/* Rules */
+#ru-title { font-weight: 900; font-size: 120px; color: var(--gold); line-height: 1; margin: 6px 0 22px; transform: rotate(-1.5deg); }
+#ru-list { width: 1500px; display: flex; flex-direction: column; gap: 16px; }
+.rule { display: flex; align-items: center; height: 112px; background: var(--cream); border: 7px solid var(--ink); border-radius: 16px; box-shadow: 8px 9px 0 var(--drop);
+  text-align: left; opacity: 0; scale: .6; translate: -120px 0; transition: opacity .25s, scale .4s cubic-bezier(.2,1.7,.4,1), translate .4s cubic-bezier(.2,1.4,.4,1); overflow: hidden; }
+.rule.show { opacity: 1; scale: 1; translate: 0 0; }
+.rule:nth-child(even) { rotate: .6deg; } .rule:nth-child(odd) { rotate: -.6deg; }
+.rule b { width: 112px; align-self: stretch; display: flex; align-items: center; justify-content: center; background: var(--gold); border-right: 7px solid var(--ink); font-weight: 900; font-size: 72px; padding-bottom: 8px; flex: none; }
+.rule span { font-size: 47px; line-height: 1.02; padding: 0 24px 6px; }
+
+/* Closing */
+#o-title { font-weight: 900; font-size: 170px; color: var(--gold); line-height: 1; transform: rotate(-2deg); }
+#o-champ { font-size: 76px; margin-top: 44px; transform: rotate(-2deg); }
+#o-result { font-size: 50px; margin-top: 22px; background: var(--gold); color: var(--ink); border: 6px solid var(--ink); border-radius: 10px; padding: 2px 28px 6px; transform: rotate(1deg); }
+#o-result:empty { display: none; }
+#o-line { font-size: 48px; margin-top: 30px; background: var(--cream); border: 6px solid var(--ink); border-radius: 10px; padding: 2px 28px 6px; }
+#s-outro > *:not(.rays) { position: relative; }
+#s-outro.enter #o-title { animation: zoom .6s cubic-bezier(.2,1.7,.4,1) both; }
+
 /* Round card */
 .burst { position: absolute; left: 50%; top: 50%; width: 1060px; height: 1060px; margin: -530px; background: var(--ink); animation: spin 50s linear infinite; }
 .burst.in { width: 1000px; height: 1000px; margin: -500px; background: var(--gold); }
@@ -186,6 +205,19 @@ html, body { width: 100%; height: 100%; background: #000; overflow: hidden; curs
       <div class="roster t0"><h2 id="ro-n0"></h2><ul id="ro-p0"></ul></div>
       <div class="roster t1"><h2 id="ro-n1"></h2><ul id="ro-p1"></ul></div>
     </div>
+  </section>
+
+  <section id="s-rules" class="screen center">
+    <div id="ru-title" class="ink"></div>
+    <div id="ru-list"></div>
+  </section>
+
+  <section id="s-outro" class="screen center">
+    <div class="rays"></div>
+    <div id="o-title" class="ink"></div>
+    <div id="o-champ" class="ribbon"></div>
+    <div id="o-result"></div>
+    <div id="o-line"></div>
   </section>
 
   <section id="s-roundcard" class="screen center">
